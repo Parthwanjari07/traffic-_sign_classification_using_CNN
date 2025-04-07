@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Sign Classifier</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .model-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .upload-section {
+            text-align: center;
+            padding: 40px 20px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        #dropZone {
+            cursor: pointer;
+        }
+        #preview {
+            max-width: 300px;
+            margin: 20px auto;
+            display: none;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #e8f5e9;
+            border-radius: 8px;
+            display: none;
+        }
+        .btn {
+            background: #2196f3;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #1976d2;
+        }
+        .confidence {
+            font-weight: bold;
+            color: #388e3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Traffic Sign Classifier</h1>
+        
+        <div class="model-info">
+            <h2>About the Model</h2>
+            <p>This traffic sign classifier uses a Convolutional Neural Network (CNN) trained on the German Traffic Sign Recognition Benchmark (GTSRB) dataset. The model can recognize 43 different types of traffic signs.</p>
+            
+            <h3>Model Architecture:</h3>
+            <ul>
+                <li>Input layer: 30x30x3 (RGB images)</li>
+                <li>Multiple convolutional layers with ReLU activation</li>
+                <li>Max pooling layers for feature extraction</li>
+                <li>Dropout layers to prevent overfitting</li>
+                <li>Dense layers for classification</li>
+                <li>Output layer with 43 classes (Softmax activation)</li>
+            </ul>
+        </div>
+
+        <div class="upload-section" id="dropZone">
+            <input type="file" id="fileInput" accept="image/*" style="display: none">
+            <p>Click here or drag and drop an image of a traffic sign</p>
+            <button class="btn" onclick="document.getElementById('fileInput').click()">Select Image</button>
+            <img id="preview" src="" alt="Preview">
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const result = document.getElementById('result');
+
+        // Handle file selection
+        fileInput.addEventListener('change', handleFile);
+
+        // Handle drag and drop
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#2196f3';
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#ddd';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#ddd';
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                handleFile({ target: { files: [file] } });
+            }
+        });
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Show preview
+                preview.style.display = 'block';
+                preview.src = URL.createObjectURL(file);
+
+                // Send to server
+                const formData = new FormData();
+                formData.append('file', file);
+
+                fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    result.style.display = 'block';
+                    if (data.error) {
+                        result.innerHTML = `<p>Error: ${data.error}</p>`;
+                    } else {
+                        result.innerHTML = `
+                            <h3>Prediction Result:</h3>
+                            <p>Traffic Sign: ${data.class}</p>
+                            <p>Confidence: <span class="confidence">${data.confidence}</span></p>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    result.style.display = 'block';
+                    result.innerHTML = `<p>Error: ${error.message}</p>`;
+                });
+            }
+        }
+    </script>
+</body>
+</html>
