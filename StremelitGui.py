@@ -3,10 +3,10 @@ import tensorflow as tf
 from PIL import Image
 import numpy as np
 
-# Load the trained model from your project folder
+
 model = tf.keras.models.load_model("my_model.h5")
 
-# Mapping from class index to sign name
+
 class_labels = {
     0: "Speed limit (20km/h)",
     1: "Speed limit (30km/h)",

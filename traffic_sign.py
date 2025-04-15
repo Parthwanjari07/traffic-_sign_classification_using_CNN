@@ -35,7 +35,38 @@ for i in range(classes):
 data = np.array(data)
 labels = np.array(labels)
 
-print(data.shape, labels.shape)
+# Data Analysis Section
+print("\n=== Dataset Analysis ===")
+print(f"Total number of images: {len(data)}")
+print(f"Number of classes: {classes}")
+
+# Display distribution of classes
+unique, counts = np.unique(labels, return_counts=True)
+plt.figure(figsize=(15, 5))
+plt.bar(unique, counts)
+plt.title('Distribution of Traffic Sign Classes')
+plt.xlabel('Class ID')
+plt.ylabel('Number of Images')
+plt.show()
+
+# Display sample images from different classes
+plt.figure(figsize=(15, 5))
+for i in range(5):
+    plt.subplot(1, 5, i+1)
+    idx = np.random.randint(0, len(data))
+    plt.imshow(data[idx])
+    plt.title(f'Class {labels[idx]}')
+    plt.axis('off')
+plt.show()
+
+# Basic image statistics
+print("\nImage Statistics:")
+print(f"Image dimensions: {data[0].shape}")
+print(f"Min pixel value: {data.min()}")
+print(f"Max pixel value: {data.max()}")
+print(f"Mean pixel value: {data.mean():.2f}")
+print(f"Standard deviation: {data.std():.2f}")
+
 #Splitting training and testing dataset
 X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=42)
 
