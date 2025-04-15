@@ -9,27 +9,28 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPool2D, Dense, Flatten, Dropout
+import seaborn as sns
 
 data = []
 labels = []
 classes = 43
-cur_path = os.getcwd()
+# Update base path to point to the Dataset directory
+base_path = os.path.join(os.path.dirname(os.getcwd()), '..', 'Dataset')
 
 #Retrieving the images and their labels 
 for i in range(classes):
-    path = os.path.join(cur_path,'train',str(i))
+    path = os.path.join(base_path, 'Train', str(i))
     images = os.listdir(path)
 
     for a in images:
         try:
-            image = Image.open(path + '\\'+ a)
+            image = Image.open(os.path.join(path, a))
             image = image.resize((30,30))
             image = np.array(image)
-            #sim = Image.fromarray(image)
             data.append(image)
             labels.append(i)
         except:
-            print("Error loading image")
+            print(f"Error loading image: {os.path.join(path, a)}")
 
 #Converting lists into numpy arrays
 data = np.array(data)
@@ -67,7 +68,76 @@ print(f"Max pixel value: {data.max()}")
 print(f"Mean pixel value: {data.mean():.2f}")
 print(f"Standard deviation: {data.std():.2f}")
 
-#Splitting training and testing dataset
+# Advanced Data Analysis
+print("\n=== Advanced Dataset Analysis ===")
+
+# 1. Enhanced Class Distribution Analysis
+plt.figure(figsize=(15, 6))
+sns.barplot(x=unique, y=counts)
+plt.title('Enhanced Distribution of Traffic Sign Classes')
+plt.xlabel('Class ID')
+plt.ylabel('Number of Images')
+plt.xticks(rotation=45)
+# Add count labels on top of each bar
+for i, v in enumerate(counts):
+    plt.text(i, v, str(v), ha='center', va='bottom')
+plt.tight_layout()
+plt.show()
+
+# 2. Class Balance Analysis
+print("\nClass Balance Analysis:")
+min_samples = min(counts)
+max_samples = max(counts)
+print(f"Minimum samples per class: {min_samples} (Class {unique[np.argmin(counts)]})")
+print(f"Maximum samples per class: {max_samples} (Class {unique[np.argmax(counts)]})")
+print(f"Imbalance ratio: {max_samples/min_samples:.2f}:1")
+
+# 3. Color Channel Analysis
+plt.figure(figsize=(15, 5))
+for i, channel in enumerate(['Red', 'Green', 'Blue']):
+    plt.subplot(1, 3, i+1)
+    channel_data = data[:, :, :, i].ravel()
+    plt.hist(channel_data, bins=50, color=['red', 'green', 'blue'][i], alpha=0.7)
+    plt.title(f'{channel} Channel Distribution')
+    plt.xlabel('Pixel Value')
+    plt.ylabel('Frequency')
+plt.tight_layout()
+plt.show()
+
+# 4. Image Quality Assessment
+print("\nImage Quality Metrics:")
+# Calculate average brightness and contrast
+brightness = np.mean(data, axis=(1,2,3))
+contrast = np.std(data, axis=(1,2,3))
+print(f"Average brightness across dataset: {np.mean(brightness):.2f}")
+print(f"Average contrast across dataset: {np.mean(contrast):.2f}")
+
+# 5. Sample Images with Augmentation Preview
+plt.figure(figsize=(15, 8))
+for i in range(3):
+    # Original image
+    idx = np.random.randint(0, len(data))
+    plt.subplot(2, 3, i+1)
+    plt.imshow(data[idx])
+    plt.title(f'Original (Class {labels[idx]})')
+    plt.axis('off')
+    
+    # Augmented version (simple rotation)
+    plt.subplot(2, 3, i+4)
+    augmented = np.rot90(data[idx])
+    plt.imshow(augmented)
+    plt.title('Rotated 90°')
+    plt.axis('off')
+plt.suptitle('Original vs Augmented Samples')
+plt.tight_layout()
+plt.show()
+
+# 6. Dimensionality Analysis
+print("\nDimensionality Analysis:")
+print(f"Total dataset size in memory: {data.nbytes / (1024 * 1024):.2f} MB")
+print(f"Number of features per image: {np.prod(data[0].shape)}")
+
+# Now proceed with train-test split
 X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=42)
 
 print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
@@ -120,7 +190,9 @@ plt.show()
 #testing accuracy on test dataset
 from sklearn.metrics import accuracy_score
 
-y_test = pd.read_csv('Test.csv')
+# Update test data path
+test_csv_path = os.path.join(base_path, 'Test.csv')
+y_test = pd.read_csv(test_csv_path)
 
 labels = y_test["ClassId"].values
 imgs = y_test["Path"].values
@@ -128,7 +200,9 @@ imgs = y_test["Path"].values
 data=[]
 
 for img in imgs:
-    image = Image.open(img)
+    # Update image path to use base_path
+    image_path = os.path.join(base_path, img)
+    image = Image.open(image_path)
     image = image.resize((30,30))
     data.append(np.array(image))
 
